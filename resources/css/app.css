@@ -1,11 +1,145 @@
 @import 'tailwindcss';
+@import '@fontsource-variable/inter';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter Variable', Inter, ui-sans-serif, system-ui, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --spacing: 0.25rem;
+
+    --color-canvas: #f7f8fa;
+    --color-panel: #ffffff;
+    --color-panel-muted: #f1f3f6;
+    --color-line: #e3e7ed;
+    --color-line-strong: #cbd2dc;
+    --color-ink: #171b24;
+    --color-ink-muted: #606a79;
+    --color-ink-subtle: #858e9c;
+
+    --color-brand-50: #f1f3ff;
+    --color-brand-100: #e4e8ff;
+    --color-brand-200: #cbd3ff;
+    --color-brand-500: #5b65d8;
+    --color-brand-600: #4a54c7;
+    --color-brand-700: #3d45a8;
+    --color-brand-800: #313887;
+
+    --color-success-50: #eef8f1;
+    --color-success-600: #24804a;
+    --color-warning-50: #fff7e8;
+    --color-warning-600: #a9680b;
+    --color-danger-50: #fff0ef;
+    --color-danger-600: #c4433d;
+    --color-info-50: #edf5ff;
+    --color-info-600: #2867a7;
+
+    --radius-sm: 0.375rem;
+    --radius-md: 0.625rem;
+    --radius-lg: 0.875rem;
+    --radius-xl: 1.125rem;
+    --radius-2xl: 1.5rem;
+
+    --shadow-panel: 0 1px 2px rgb(23 27 36 / 4%), 0 5px 16px rgb(23 27 36 / 3%);
+    --shadow-popover: 0 12px 32px rgb(23 27 36 / 12%);
+    --shadow-drawer: -24px 0 64px rgb(23 27 36 / 14%);
+
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 0.9375rem;
+    --text-lg: 1.0625rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+
+    --ease-smooth: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+:root {
+    color-scheme: light;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+:root.dark {
+    color-scheme: dark;
+    --color-canvas: #101318;
+    --color-panel: #181c23;
+    --color-panel-muted: #202630;
+    --color-line: #2b323d;
+    --color-line-strong: #3b4552;
+    --color-ink: #eef1f6;
+    --color-ink-muted: #a5afbd;
+    --color-ink-subtle: #7d8897;
+
+    --color-brand-50: #242844;
+    --color-brand-100: #2d3356;
+    --color-brand-200: #454d7c;
+    --color-brand-500: #9da7ff;
+    --color-brand-600: #aab2ff;
+    --color-brand-700: #bdc3ff;
+    --color-brand-800: #d3d7ff;
+
+    --color-success-50: #183125;
+    --color-success-600: #83d6a0;
+    --color-warning-50: #392d1a;
+    --color-warning-600: #f2c271;
+    --color-danger-50: #3b2223;
+    --color-danger-600: #ff9a94;
+    --color-info-50: #1d2c40;
+    --color-info-600: #8fc4ff;
+}
+
+html {
+    min-width: 20rem;
+    scroll-behavior: smooth;
+}
+
+body {
+    min-height: 100vh;
+    font-variant-numeric: tabular-nums;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea,
+summary {
+    -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }
