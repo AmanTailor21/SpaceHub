@@ -7,6 +7,13 @@
 @endsection
 
 @section('content')
+    @if ($errors->any())
+        <div class="mb-5 rounded-lg border border-danger-600/30 bg-danger-50 px-4 py-3 text-sm text-danger-600" role="alert" aria-live="assertive">
+            <p class="font-semibold">We couldn’t save that booking.</p>
+            <p class="mt-1">{{ $errors->first() }}</p>
+        </div>
+    @endif
+
     <x-page-header
         eyebrow="Room schedule"
         :title="\Carbon\Carbon::parse($selectedDate)->format('D, d M Y')"
@@ -116,6 +123,13 @@
                                         data-grid-start="{{ $bookingStart + 1 }}"
                                         data-grid-end="{{ max($bookingStart + 1, $bookingEnd) + 1 }}"
                                         data-booking-id="{{ $booking->id }}"
+                                        data-booking-title="{{ $booking->title }}"
+                                        data-booked-by="{{ $booking->booked_by }}"
+                                        data-room-name="{{ $room->name }}"
+                                        data-starts-at="{{ $booking->start_time->format('d M Y · H:i') }} IST"
+                                        data-ends-at="{{ $booking->end_time->format('H:i') }} IST"
+                                        data-booking-status="{{ $booking->status->value }}"
+                                        data-cancel-url="{{ route('bookings.destroy', $booking->id) }}"
                                         data-open-booking-details
                                         aria-label="{{ $booking->title }}, {{ $booking->start_time->format('H:i') }} to {{ $booking->end_time->format('H:i') }} IST, {{ $booking->status->value }}"
                                         title="{{ $booking->title }} · {{ $booking->start_time->format('H:i') }}–{{ $booking->end_time->format('H:i') }} IST"
@@ -139,6 +153,13 @@
                                 <button
                                     type="button"
                                     data-booking-id="{{ $booking->id }}"
+                                    data-booking-title="{{ $booking->title }}"
+                                    data-booked-by="{{ $booking->booked_by }}"
+                                    data-room-name="{{ $room->name }}"
+                                    data-starts-at="{{ $booking->start_time->format('d M Y · H:i') }} IST"
+                                    data-ends-at="{{ $booking->end_time->format('H:i') }} IST"
+                                    data-booking-status="{{ $booking->status->value }}"
+                                    data-cancel-url="{{ route('bookings.destroy', $booking->id) }}"
                                     data-open-booking-details
                                     class="flex w-full items-start justify-between gap-3 rounded-md border border-line bg-panel-muted/50 p-3 text-left"
                                 >
@@ -168,24 +189,85 @@
         <p><span class="font-medium text-ink-muted">Tip:</span> Select an empty 30-minute slot to start a booking.</p>
     </div>
 
-    <section id="new-booking" class="mt-8 scroll-mt-24">
-        <x-card title="New booking" description="Choose a room and meeting time. Slots are shown in IST." padding="lg">
-            <form method="POST" action="{{ route('bookings.store') }}" class="grid gap-4 sm:grid-cols-2">
+    <div
+        x-data="bookingDrawer"
+        data-open-on-load="{{ $errors->any() ? 'true' : 'false' }}"
+        @spacehub:booking-open.window="openBooking"
+    >
+        <x-drawer id="booking-create" title="New booking" description="Choose a room and meeting time. All times are shown in IST.">
+            <form method="POST" action="{{ route('bookings.store') }}" class="flex min-h-[calc(100dvh-8rem)] flex-col">
                 @csrf
-                <x-select name="room_id" label="Room" required>
-                    <option value="">Choose a room</option>
-                    @foreach ($rooms as $room)
-                        <option value="{{ $room->id }}" @selected(old('room_id') == $room->id)>{{ $room->name }} · {{ $room->capacity }} seats · {{ $room->floor }}</option>
-                    @endforeach
-                </x-select>
-                <x-input name="title" label="Meeting title" :value="old('title')" required maxlength="255" />
-                <x-input name="booked_by" label="Booked by" :value="old('booked_by')" required maxlength="255" />
-                <x-time-picker name="start_time" label="Starts · IST" type="datetime-local" :value="old('start_time')" required />
-                <x-time-picker name="end_time" label="Ends · IST" type="datetime-local" :value="old('end_time')" required />
-                <div class="flex items-end sm:col-span-2">
-                    <x-button type="submit" class="w-full sm:w-auto">Confirm booking</x-button>
+                <div class="space-y-5">
+                    <x-select name="room_id" label="Room" required x-ref="room">
+                        <option value="">Choose a room</option>
+                        @foreach ($rooms as $room)
+                            <option value="{{ $room->id }}" @selected(old('room_id') == $room->id)>{{ $room->name }} · {{ $room->capacity }} seats · {{ $room->floor }}</option>
+                        @endforeach
+                    </x-select>
+                    <x-input name="title" label="Meeting title" :value="old('title')" required maxlength="255" x-ref="title" />
+                    <x-input name="booked_by" label="Booked by" :value="old('booked_by')" required maxlength="255" />
+                    <x-time-picker name="start_time" label="Starts · IST" type="datetime-local" :value="old('start_time')" required x-ref="startTime" @input="updateDuration" />
+                    <x-time-picker name="end_time" label="Ends · IST" type="datetime-local" :value="old('end_time')" required x-ref="endTime" @input="updateDuration" />
+                    <p class="text-xs text-ink-subtle" aria-live="polite">
+                        Duration: <span x-text="duration || 'Set a valid start and end time'"></span>
+                    </p>
+                </div>
+                <div class="mt-auto flex gap-2 border-t border-line pt-5">
+                    <x-button type="submit" class="flex-1">Confirm booking</x-button>
+                    <x-button type="button" variant="secondary" @click="closeDialog">Close</x-button>
                 </div>
             </form>
-        </x-card>
-    </section>
+        </x-drawer>
+    </div>
+
+    <div
+        x-data="bookingDetails"
+        @spacehub:booking-details.window="openDetails"
+        @spacehub:confirm-accepted.window="acceptCancel"
+    >
+        <x-drawer id="booking-details" title="Booking details" description="Meeting information and booking status.">
+            <div class="space-y-5">
+                <div>
+                    <p class="text-xs font-medium uppercase tracking-wide text-ink-subtle">Meeting</p>
+                    <h3 class="mt-1 text-lg font-semibold text-ink" x-text="booking.title"></h3>
+                </div>
+                <dl class="divide-y divide-line rounded-lg border border-line">
+                    <div class="flex justify-between gap-4 px-4 py-3 text-sm">
+                        <dt class="text-ink-muted">Room</dt>
+                        <dd class="font-medium text-ink" x-text="booking.room"></dd>
+                    </div>
+                    <div class="flex justify-between gap-4 px-4 py-3 text-sm">
+                        <dt class="text-ink-muted">Starts</dt>
+                        <dd class="font-medium text-ink" x-text="booking.startsAt"></dd>
+                    </div>
+                    <div class="flex justify-between gap-4 px-4 py-3 text-sm">
+                        <dt class="text-ink-muted">Ends</dt>
+                        <dd class="font-medium text-ink" x-text="booking.endsAt"></dd>
+                    </div>
+                    <div class="flex justify-between gap-4 px-4 py-3 text-sm">
+                        <dt class="text-ink-muted">Booked by</dt>
+                        <dd class="font-medium text-ink" x-text="booking.bookedBy"></dd>
+                    </div>
+                    <div class="flex justify-between gap-4 px-4 py-3 text-sm">
+                        <dt class="text-ink-muted">Status</dt>
+                        <dd class="font-medium capitalize text-ink" x-text="booking.status"></dd>
+                    </div>
+                </dl>
+                <button
+                    type="button"
+                    x-show="booking.status === 'confirmed'"
+                    @click="askCancel"
+                    class="min-h-10 rounded-md border border-danger-600/40 px-3 text-sm font-semibold text-danger-600 hover:bg-danger-50"
+                >Cancel booking</button>
+                <form x-ref="cancelForm" method="POST" :action="booking.cancelUrl" class="hidden">
+                    @csrf
+                    @method('DELETE')
+                </form>
+            </div>
+        </x-drawer>
+
+        <x-confirm-dialog id="cancel-confirm" title="Cancel this booking?" confirm-label="Cancel booking">
+            <p>Cancel <span class="font-semibold text-ink" x-text="booking.title"></span>? This releases the room for that time.</p>
+        </x-confirm-dialog>
+    </div>
 @endsection

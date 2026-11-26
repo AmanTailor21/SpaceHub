@@ -47,7 +47,7 @@ Alpine.data('themeToggle', () => ({
     },
 }));
 
-Alpine.data('dialog', () => ({
+const dialogBehavior = () => ({
     returnFocus: null,
 
     openDialog(event) {
@@ -78,15 +78,32 @@ Alpine.data('dialog', () => ({
         this.returnFocus?.focus?.();
         this.returnFocus = null;
     },
-}));
+});
+
+Alpine.data('dialog', dialogBehavior);
 
 Alpine.data('toast', () => ({
     visible: false,
     message: '',
+    variant: 'success',
     timeout: null,
+
+    init() {
+        const message = this.$el.dataset.initialMessage;
+
+        if (message) {
+            this.showToast({
+                detail: {
+                    message,
+                    variant: this.$el.dataset.variant ?? 'success',
+                },
+            });
+        }
+    },
 
     showToast(event) {
         this.message = event.detail?.message ?? '';
+        this.variant = event.detail?.variant ?? 'success';
         this.visible = true;
         window.clearTimeout(this.timeout);
         this.timeout = window.setTimeout(() => {
@@ -99,5 +116,125 @@ Alpine.data('toast', () => ({
         window.clearTimeout(this.timeout);
     },
 }));
+
+Alpine.data('bookingDrawer', () => ({
+    duration: '',
+
+    init() {
+        this.updateDuration();
+
+        if (this.$el.dataset.openOnLoad === 'true') {
+            window.setTimeout(() => this.openDrawer(), 0);
+        }
+    },
+
+    openBooking(event) {
+        const booking = event.detail ?? {};
+
+        if (booking.roomId) {
+            this.$refs.room.value = booking.roomId;
+        }
+
+        if (booking.startTime) {
+            this.$refs.startTime.value = booking.startTime;
+        }
+
+        if (booking.endTime) {
+            this.$refs.endTime.value = booking.endTime;
+        }
+
+        this.updateDuration();
+        this.openDrawer();
+    },
+
+    openDrawer() {
+        this.$dispatch('spacehub:dialog-open', { id: 'booking-create' });
+        this.$nextTick(() => {
+            const invalidField = this.$el.querySelector('[aria-invalid="true"]');
+            (invalidField ?? this.$refs.title).focus();
+        });
+    },
+
+    updateDuration() {
+        const start = new Date(this.$refs.startTime.value);
+        const end = new Date(this.$refs.endTime.value);
+        const minutes = (end - start) / 60000;
+
+        this.duration = Number.isFinite(minutes) && minutes > 0
+            ? `${Math.floor(minutes / 60)}h ${minutes % 60}m`
+            : '';
+    },
+}));
+
+Alpine.data('bookingDetails', () => ({
+    booking: {},
+
+    openDetails(event) {
+        this.booking = event.detail ?? {};
+        this.$dispatch('spacehub:dialog-open', { id: 'booking-details' });
+    },
+
+    askCancel() {
+        this.$dispatch('spacehub:dialog-open', { id: 'cancel-confirm' });
+    },
+
+    acceptCancel(event) {
+        if (event.detail?.id !== 'cancel-confirm') {
+            return;
+        }
+
+        this.$dispatch('spacehub:dialog-close', { id: 'cancel-confirm' });
+        this.$refs.cancelForm.requestSubmit();
+    },
+}));
+
+Alpine.data('confirmDialog', () => ({
+    ...dialogBehavior(),
+
+    accept() {
+        this.$dispatch('spacehub:confirm-accepted', {
+            id: this.$el.dataset.confirmId,
+        });
+    },
+}));
+
+document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) {
+        return;
+    }
+
+    const detailsTrigger = event.target.closest('[data-open-booking-details]');
+
+    if (detailsTrigger) {
+        event.preventDefault();
+        document.dispatchEvent(new CustomEvent('spacehub:booking-details', {
+            detail: {
+                id: detailsTrigger.dataset.bookingId,
+                title: detailsTrigger.dataset.bookingTitle,
+                bookedBy: detailsTrigger.dataset.bookedBy,
+                room: detailsTrigger.dataset.roomName,
+                startsAt: detailsTrigger.dataset.startsAt,
+                endsAt: detailsTrigger.dataset.endsAt,
+                status: detailsTrigger.dataset.bookingStatus,
+                cancelUrl: detailsTrigger.dataset.cancelUrl,
+            },
+        }));
+
+        return;
+    }
+
+    const bookingTrigger = event.target.closest('[data-open-booking]');
+
+    if (bookingTrigger && document.getElementById('booking-create')) {
+        event.preventDefault();
+        document.dispatchEvent(new CustomEvent('spacehub:booking-open', {
+            detail: {
+                roomId: bookingTrigger.dataset.roomId,
+                startTime: bookingTrigger.dataset.startTime,
+                endTime: bookingTrigger.dataset.endTime,
+            },
+        }));
+    }
+});
 
 Alpine.start();

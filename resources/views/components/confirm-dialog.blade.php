@@ -5,7 +5,7 @@
     'variant' => 'danger',
 ])
 
-<div x-data="dialog">
+<div x-data="confirmDialog" data-confirm-id="{{ $id }}">
     <dialog
         id="{{ $id }}"
         x-ref="dialog"
@@ -20,7 +20,7 @@
             <div class="mt-2 text-sm leading-6 text-ink-muted">{{ $slot }}</div>
             <div class="mt-6 flex justify-end gap-2">
                 <x-button variant="secondary" @click="closeDialog">Keep it</x-button>
-                <x-button :variant="$variant" data-confirm-accept>{{ $confirmLabel }}</x-button>
+                <x-button :variant="$variant" data-confirm-accept @click="accept">{{ $confirmLabel }}</x-button>
             </div>
         </div>
     </dialog>

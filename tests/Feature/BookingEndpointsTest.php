@@ -110,6 +110,25 @@ class BookingEndpointsTest extends TestCase
             ->assertSessionHasErrors('end_time');
     }
 
+    public function test_web_conflict_restores_the_submitted_day_and_reopens_the_booking_drawer(): void
+    {
+        $this->post('/bookings', $this->payload($this->alpha, '10:00', '11:00'))
+            ->assertRedirect('/?date=2030-01-02');
+
+        $this->from('/')
+            ->post('/bookings', $this->payload($this->alpha, '10:30', '11:30'))
+            ->assertRedirect('/')
+            ->assertSessionHasErrors('start_time');
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('data-open-on-load="true"', false)
+            ->assertSee('Team stand-up (10:00 - 11:00) is already booked for this room.')
+            ->assertSee('date=2030-01-01&amp;room_id='.$this->alpha->id, false)
+            ->assertSee('value="2030-01-02T10:30:00"', false)
+            ->assertSee('value="2030-01-02T11:30:00"', false);
+    }
+
     /**
      * @return array{room_id: int, title: string, booked_by: string, start_time: string, end_time: string}
      */

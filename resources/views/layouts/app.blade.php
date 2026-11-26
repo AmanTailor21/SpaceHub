@@ -118,5 +118,9 @@
             </main>
         </div>
     </div>
+    <x-toast
+        :message="$errors->any() ? $errors->first() : session('success')"
+        :variant="$errors->any() ? 'danger' : 'success'"
+    />
 </body>
 </html>

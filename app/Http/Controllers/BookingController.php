@@ -17,8 +17,11 @@ class BookingController extends Controller
         BookingService $bookings,
     ): View {
         $filters = $request->validated();
-        $date = $filters['date'] ?? now()->toDateString();
-        $roomId = isset($filters['room_id']) ? (int) $filters['room_id'] : null;
+        $date = $filters['date'] ?? $this->dateFromOldBooking() ?? now()->toDateString();
+        $oldRoomId = old('room_id');
+        $roomId = isset($filters['room_id'])
+            ? (int) $filters['room_id']
+            : (is_numeric($oldRoomId) ? (int) $oldRoomId : null);
         $rooms = Room::query()->orderBy('floor')->orderBy('name')->get();
         $dayBookings = $bookings->forDay($date, $roomId)->groupBy('room_id');
         $day = Carbon::parse($date, (string) config('app.timezone'));
@@ -38,6 +41,21 @@ class BookingController extends Controller
             'nowOffset' => $nowOffset,
             'timeLabels' => range(8, 20),
         ]);
+    }
+
+    private function dateFromOldBooking(): ?string
+    {
+        $startTime = old('start_time');
+
+        if (! is_string($startTime) || ! preg_match('/^(\d{4})-(\d{2})-(\d{2})T/', $startTime, $matches)) {
+            return null;
+        }
+
+        if (! checkdate((int) $matches[2], (int) $matches[3], (int) $matches[1])) {
+            return null;
+        }
+
+        return substr($startTime, 0, 10);
     }
 
     public function store(
