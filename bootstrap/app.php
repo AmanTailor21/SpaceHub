@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Exceptions\BookingAlreadyCancelledException;
 use App\Exceptions\BookingConflictException;
 
@@ -34,5 +35,16 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return redirect()->back()->withInput()->withErrors($errors);
+        });
+
+        $exceptions->render(function (ModelNotFoundException $exception, Request $request) {
+            if (! $request->expectsJson()) {
+                return null;
+            }
+
+            return response()->json([
+                'message' => 'The requested resource was not found.',
+                'errors' => ['booking' => ['The requested resource was not found.']],
+            ], 404);
         });
     })->create();

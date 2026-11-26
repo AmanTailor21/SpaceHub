@@ -8,6 +8,7 @@ use App\Exceptions\BookingConflictException;
 use App\Models\Booking;
 use App\Models\Room;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
 class BookingService
@@ -60,5 +61,22 @@ class BookingService
 
             return $booking;
         });
+    }
+
+    /**
+     * @return Collection<int, Booking>
+     */
+    public function forDay(string $date, ?int $roomId = null): Collection
+    {
+        $day = Carbon::parse($date, (string) config('app.timezone'))->startOfDay();
+        $nextDay = $day->copy()->addDay();
+
+        return Booking::query()
+            ->with('room')
+            ->where('start_time', '>=', $day)
+            ->where('start_time', '<', $nextDay)
+            ->when($roomId !== null, fn ($query) => $query->where('room_id', $roomId))
+            ->orderBy('start_time')
+            ->get();
     }
 }
