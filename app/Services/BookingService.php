@@ -9,6 +9,7 @@ use App\Models\Booking;
 use App\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 class BookingService
@@ -77,6 +78,25 @@ class BookingService
             ->where('start_time', '<', $nextDay)
             ->when($roomId !== null, fn ($query) => $query->where('room_id', $roomId))
             ->orderBy('start_time')
+            ->get();
+    }
+
+    /**
+     * @return Collection<int, Room>
+     */
+    public function availableRooms(string $startTime, string $endTime, int $people): Collection
+    {
+        $timezone = (string) config('app.timezone');
+        $start = Carbon::parse($startTime, $timezone)->setTimezone($timezone);
+        $end = Carbon::parse($endTime, $timezone)->setTimezone($timezone);
+
+        return Room::query()
+            ->where('capacity', '>=', $people)
+            ->whereDoesntHave('bookings', function (Builder $query) use ($start, $end): void {
+                $query->overlapping(null, $start, $end);
+            })
+            ->orderBy('floor')
+            ->orderBy('name')
             ->get();
     }
 }

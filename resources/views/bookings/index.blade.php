@@ -9,6 +9,29 @@
         <p class="mt-2 text-slate-600">Book a room and see what is happening throughout the day.</p>
     </div>
 
+    <section class="mb-8 rounded-xl border border-indigo-100 bg-indigo-50/60 p-5">
+        <h2 class="font-semibold">Find an available room</h2>
+        <form method="GET" action="{{ route('rooms.available') }}" class="mt-4 flex flex-wrap items-end gap-4">
+            <div>
+                <label for="availability-date" class="mb-1 block text-sm font-medium">Date</label>
+                <input id="availability-date" type="date" name="date" value="{{ $selectedDate }}" required class="rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label for="availability-start" class="mb-1 block text-sm font-medium">Starts</label>
+                <input id="availability-start" type="time" name="start_time" required class="rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label for="availability-end" class="mb-1 block text-sm font-medium">Ends</label>
+                <input id="availability-end" type="time" name="end_time" required class="rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label for="availability-people" class="mb-1 block text-sm font-medium">People</label>
+                <input id="availability-people" type="number" name="people" min="1" value="1" required class="w-24 rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+            </div>
+            <button type="submit" class="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-800">Find rooms</button>
+        </form>
+    </section>
+
     <div class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <section>
             <form method="GET" action="{{ route('bookings.index') }}" class="mb-6 flex flex-wrap items-end gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">

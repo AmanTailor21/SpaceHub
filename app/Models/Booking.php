@@ -39,12 +39,12 @@ class Booking extends Model
      */
     public function scopeOverlapping(
         Builder $query,
-        int $roomId,
+        ?int $roomId,
         DateTimeInterface $start,
         DateTimeInterface $end,
     ): Builder {
         return $query
-            ->where('room_id', $roomId)
+            ->when($roomId !== null, fn (Builder $query) => $query->where('room_id', $roomId))
             ->where('status', BookingStatus::Confirmed->value)
             ->where('start_time', '<', $end)
             ->where('end_time', '>', $start);
