@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+mapfile -d '' staged_php_files < <(git diff --cached --name-only --diff-filter=ACMR -z -- '*.php')
+
+if ((${#staged_php_files[@]})); then
+    ./vendor/bin/pint "${staged_php_files[@]}"
+    git add -- "${staged_php_files[@]}"
+fi
+
+composer analyse
+composer test

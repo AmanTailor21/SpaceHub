@@ -3,11 +3,22 @@
 namespace App\Models;
 
 use App\Enums\BookingStatus;
+use Carbon\Carbon;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $room_id
+ * @property string $title
+ * @property string $booked_by
+ * @property Carbon $start_time
+ * @property Carbon $end_time
+ * @property BookingStatus $status
+ * @property-read Room $room
+ */
 class Booking extends Model
 {
     protected $fillable = [
@@ -28,6 +39,9 @@ class Booking extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Room, $this>
+     */
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);
