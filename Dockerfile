@@ -11,12 +11,15 @@ RUN npm run build
 FROM php:8.3-fpm AS php-app
 WORKDIR /var/www/html
 
-RUN docker-php-ext-install pdo_mysql
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libsqlite3-dev \
+    && docker-php-ext-install pdo_mysql pdo_sqlite \
+    && rm -rf /var/lib/apt/lists/*
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 COPY composer.json composer.lock ./
 COPY . .
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
 COPY --from=assets /app/public/build ./public/build
 RUN chmod +x docker/entrypoint.sh \

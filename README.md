@@ -1,59 +1,127 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SpaceHub
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+SpaceHub is a small internal meeting-room booking app for a co-working space. It replaces chat and paper tracking with a shared schedule, conflict-safe bookings, and room availability search.
 
-## About Laravel
+## Run with Docker
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Docker Compose builds the app and assets, starts PHP-FPM, Nginx, and MySQL, creates the application key when needed, waits for MySQL, then migrates and seeds the database.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+```sh
+docker compose up --build
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Open the app at [http://localhost:8080](http://localhost:8080). MySQL data is kept in the named `mysql_data` volume and survives container restarts. `docker compose down` preserves it; `docker compose down -v` removes it.
 
-## Learning Laravel
+The six seeded rooms are Alpha (4, 1F), Beta (6, 1F), Gamma (8, 2F), Delta (10, 2F), Epsilon (12, 3F), and Zeta (20, 3F). The seed is safe to rerun.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Checks and development
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Run the test suite, Pint check, or Larastan from the running app container:
 
-## Laravel Sponsors
+```sh
+docker compose exec app composer test
+docker compose exec app composer lint
+docker compose exec app composer analyse
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Format code on the host with `composer format`. After cloning, install the pre-commit hook once:
 
-### Premium Partners
+```sh
+git config core.hooksPath .githooks
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+The hook formats staged PHP files, stages the formatting changes, then runs static analysis and tests. Tests use an in-memory SQLite database via `phpunit.xml`; the running application uses MySQL 8.
 
-## Contributing
+For frontend-only changes on a host with Node.js, run `npm ci` and `npm run build`. Docker builds the production assets automatically.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## API
 
-## Code of Conduct
+All API responses use JSON. Validation errors have the shape `{"message":"...","errors":{"field":["..."]}}`.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Rooms
 
-## Security Vulnerabilities
+`GET /api/rooms` returns the room directory:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```json
+{
+  "data": [
+    {"id": 1, "name": "Alpha", "capacity": 4, "floor": "1F"},
+    {"id": 2, "name": "Beta", "capacity": 6, "floor": "1F"}
+  ]
+}
+```
 
-## License
+### Create a booking
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+`POST /api/bookings` accepts ISO 8601 datetimes with the SpaceHub timezone offset:
+
+```sh
+curl -X POST http://localhost:8080/api/bookings \
+  -H "Content-Type: application/json" \
+  -d '{
+    "room_id": 1,
+    "title": "Product planning",
+    "booked_by": "Aman",
+    "start_time": "2030-01-02T10:00:00+05:30",
+    "end_time": "2030-01-02T11:00:00+05:30"
+  }'
+```
+
+Success returns `201 Created`:
+
+```json
+{
+  "data": {
+    "id": 1,
+    "room_id": 1,
+    "room": "Alpha",
+    "title": "Product planning",
+    "booked_by": "Aman",
+    "start_time": "2030-01-02T10:00:00+05:30",
+    "end_time": "2030-01-02T11:00:00+05:30",
+    "status": "confirmed"
+  }
+}
+```
+
+Overlapping active bookings return `409 Conflict` and name the existing booking:
+
+```json
+{
+  "message": "Product planning (10:00 - 11:00) is already booked for this room.",
+  "errors": {
+    "start_time": ["Product planning (10:00 - 11:00) is already booked for this room."]
+  }
+}
+```
+
+### List and cancel bookings
+
+- `GET /api/bookings?date=2030-01-02&room_id=1` lists that day's bookings, optionally for one room. Cancelled bookings remain visible with `status: "cancelled"`.
+- `DELETE /api/bookings/1` changes the booking status to cancelled and returns the cancelled booking. Cancelling again returns `422` with a clear message.
+
+### Find available rooms
+
+`GET /api/rooms/available?date=2030-01-02&start_time=10%3A00&end_time=11%3A00&people=5` returns rooms that fit the group and have no active overlapping booking. Availability times use `HH:mm` in the requested date and the app timezone.
+
+## Design choices and assumptions
+
+- Laravel 12, PHP 8.3, MySQL 8, Blade, Tailwind CSS, Vite, PHPUnit, Pint, and Larastan.
+- The app is for an internal, trusted network and has no authentication or authorization.
+- All booking times use `Asia/Kolkata`. Bookings must be for one day, start no earlier than 08:00, end by 20:00, and last at most four hours. The end must be later than the start.
+- A booking blocks a slot exactly when `existing.start < requested.end AND existing.end > requested.start`. Therefore, adjacent bookings are allowed.
+- Cancellation is a status change, not deletion. Cancelled bookings do not block availability and remain in the schedule for reference.
+- Booking creation locks the room row with `lockForUpdate` inside a database transaction before checking overlap and inserting. This serializes competing booking attempts for a room on MySQL; SQLite is used only for the fast automated tests and does not verify MySQL locking behavior.
+- Datetimes are stored as timezone-local MySQL `DATETIME` values and serialized with the app timezone. This is intentionally a single-timezone internal app.
+- The app uses a single-day schedule and does not support authentication, recurring bookings, invitations, or notifications.
+
+## What I would improve with more time
+
+- Add authentication and role-based permissions, with booking ownership tied to an account.
+- Add integration/load tests against MySQL for simultaneous booking attempts and verify locking under contention.
+- Add a calendar-style timeline, configurable opening hours, and booking notifications if the co-working workflow needs them.
+- Add CI for the test, formatting, and static-analysis commands.
+
+## AI tools
+
+Copilot SDK in VS Code was used as an AI coding assistant to draft and revise Laravel implementation, tests, and this documentation. The changes were checked iteratively with PHPUnit, Pint, and Larastan; the AI did not run Docker in this environment because Docker was unavailable.
