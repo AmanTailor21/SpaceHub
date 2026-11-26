@@ -52,7 +52,7 @@ class RoomDirectoryViewTest extends TestCase
     {
         $this->get('/rooms/available?date=2030-01-03&start_time=10:00&end_time=11:00&people=5')
             ->assertOk()
-            ->assertSee('Book this room')
+            ->assertSee('data-open-booking', false)
             ->assertSee('data-start-time="2030-01-03T10:00"', false)
             ->assertSee('data-end-time="2030-01-03T11:00"', false)
             ->assertSee('start_time=2030-01-03T10%3A00', false);

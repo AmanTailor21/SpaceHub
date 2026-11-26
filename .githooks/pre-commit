@@ -8,5 +8,12 @@ if ((${#staged_php_files[@]})); then
     git add -- "${staged_php_files[@]}"
 fi
 
+mapfile -d '' staged_frontend_files < <(git diff --cached --name-only --diff-filter=ACMR -z -- '*.blade.php' '*.js' '*.css' 'package.json' '.prettierrc.json' '*.md' '*.yml' '*.yaml')
+
+if ((${#staged_frontend_files[@]})); then
+    npx prettier --write "${staged_frontend_files[@]}"
+    git add -- "${staged_frontend_files[@]}"
+fi
+
 composer analyse
 composer test

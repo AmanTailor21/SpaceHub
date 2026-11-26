@@ -34,9 +34,18 @@ Format code on the host with `composer format`. After cloning, install the pre-c
 git config core.hooksPath .githooks
 ```
 
-The hook formats staged PHP files, stages the formatting changes, then runs static analysis and tests. Tests use an in-memory SQLite database via `phpunit.xml`; the running application uses MySQL 8.
+The hook formats and stages changed PHP, Blade, CSS, JavaScript, and documentation files, then runs static analysis and tests. CI runs the same PHP checks plus Prettier and a production asset build. Tests use an in-memory SQLite database via `phpunit.xml`; the running application uses MySQL 8.
 
-For frontend-only changes on a host with Node.js, run `npm ci` and `npm run build`. Docker builds the production assets automatically.
+For frontend-only changes on a host with Node.js, run:
+
+```sh
+npm ci
+npm run format:frontend
+npm run format:frontend:check
+npm run build
+```
+
+Docker builds the production assets automatically.
 
 ## API
 
@@ -48,10 +57,10 @@ All API responses use JSON. Validation errors have the shape `{"message":"...","
 
 ```json
 {
-  "data": [
-    {"id": 1, "name": "Alpha", "capacity": 4, "floor": "1F"},
-    {"id": 2, "name": "Beta", "capacity": 6, "floor": "1F"}
-  ]
+    "data": [
+        { "id": 1, "name": "Alpha", "capacity": 4, "floor": "1F" },
+        { "id": 2, "name": "Beta", "capacity": 6, "floor": "1F" }
+    ]
 }
 ```
 
@@ -75,16 +84,16 @@ Success returns `201 Created`:
 
 ```json
 {
-  "data": {
-    "id": 1,
-    "room_id": 1,
-    "room": "Alpha",
-    "title": "Product planning",
-    "booked_by": "Aman",
-    "start_time": "2030-01-02T10:00:00+05:30",
-    "end_time": "2030-01-02T11:00:00+05:30",
-    "status": "confirmed"
-  }
+    "data": {
+        "id": 1,
+        "room_id": 1,
+        "room": "Alpha",
+        "title": "Product planning",
+        "booked_by": "Aman",
+        "start_time": "2030-01-02T10:00:00+05:30",
+        "end_time": "2030-01-02T11:00:00+05:30",
+        "status": "confirmed"
+    }
 }
 ```
 
@@ -92,10 +101,10 @@ Overlapping active bookings return `409 Conflict` and name the existing booking:
 
 ```json
 {
-  "message": "Product planning (10:00 - 11:00) is already booked for this room.",
-  "errors": {
-    "start_time": ["Product planning (10:00 - 11:00) is already booked for this room."]
-  }
+    "message": "Product planning (10:00 - 11:00) is already booked for this room.",
+    "errors": {
+        "start_time": ["Product planning (10:00 - 11:00) is already booked for this room."]
+    }
 }
 ```
 

@@ -6,8 +6,7 @@ const themePreference = localStorage.getItem(themeKey) ?? 'system';
 const systemColorScheme = window.matchMedia('(prefers-color-scheme: dark)');
 
 function applyTheme(preference) {
-    const useDark = preference === 'dark'
-        || (preference === 'system' && systemColorScheme.matches);
+    const useDark = preference === 'dark' || (preference === 'system' && systemColorScheme.matches);
 
     document.documentElement.classList.toggle('dark', useDark);
 }
@@ -33,7 +32,7 @@ Alpine.data('appShell', () => ({
     },
 
     toggleSidebar() {
-        this.sidebarOpen = ! this.sidebarOpen;
+        this.sidebarOpen = !this.sidebarOpen;
 
         if (this.sidebarOpen) {
             this.$nextTick(() => document.querySelector('#app-sidebar a')?.focus());
@@ -43,7 +42,7 @@ Alpine.data('appShell', () => ({
     closeSidebar() {
         this.sidebarOpen = false;
 
-        if (! this.isDesktop) {
+        if (!this.isDesktop) {
             this.$nextTick(() => document.querySelector('[aria-controls="app-sidebar"]')?.focus());
         }
     },
@@ -53,7 +52,7 @@ Alpine.data('appShell', () => ({
     },
 
     get sidebarInert() {
-        return ! this.isDesktop && ! this.sidebarOpen;
+        return !this.isDesktop && !this.sidebarOpen;
     },
 }));
 
@@ -204,9 +203,7 @@ Alpine.data('bookingDrawer', () => ({
         const end = new Date(endValue);
         const minutes = (end - start) / 60000;
 
-        this.duration = Number.isFinite(minutes) && minutes > 0
-            ? `${Math.floor(minutes / 60)}h ${minutes % 60}m`
-            : '';
+        this.duration = Number.isFinite(minutes) && minutes > 0 ? `${Math.floor(minutes / 60)}h ${minutes % 60}m` : '';
     },
 }));
 
@@ -251,18 +248,20 @@ document.addEventListener('click', (event) => {
 
     if (detailsTrigger) {
         event.preventDefault();
-        document.dispatchEvent(new CustomEvent('spacehub:booking-details', {
-            detail: {
-                id: detailsTrigger.dataset.bookingId,
-                title: detailsTrigger.dataset.bookingTitle,
-                bookedBy: detailsTrigger.dataset.bookedBy,
-                room: detailsTrigger.dataset.roomName,
-                startsAt: detailsTrigger.dataset.startsAt,
-                endsAt: detailsTrigger.dataset.endsAt,
-                status: detailsTrigger.dataset.bookingStatus,
-                cancelUrl: detailsTrigger.dataset.cancelUrl,
-            },
-        }));
+        document.dispatchEvent(
+            new CustomEvent('spacehub:booking-details', {
+                detail: {
+                    id: detailsTrigger.dataset.bookingId,
+                    title: detailsTrigger.dataset.bookingTitle,
+                    bookedBy: detailsTrigger.dataset.bookedBy,
+                    room: detailsTrigger.dataset.roomName,
+                    startsAt: detailsTrigger.dataset.startsAt,
+                    endsAt: detailsTrigger.dataset.endsAt,
+                    status: detailsTrigger.dataset.bookingStatus,
+                    cancelUrl: detailsTrigger.dataset.cancelUrl,
+                },
+            }),
+        );
 
         return;
     }
@@ -271,13 +270,15 @@ document.addEventListener('click', (event) => {
 
     if (bookingTrigger && document.getElementById('booking-create')) {
         event.preventDefault();
-        document.dispatchEvent(new CustomEvent('spacehub:booking-open', {
-            detail: {
-                roomId: bookingTrigger.dataset.roomId,
-                startTime: bookingTrigger.dataset.startTime,
-                endTime: bookingTrigger.dataset.endTime,
-            },
-        }));
+        document.dispatchEvent(
+            new CustomEvent('spacehub:booking-open', {
+                detail: {
+                    roomId: bookingTrigger.dataset.roomId,
+                    startTime: bookingTrigger.dataset.startTime,
+                    endTime: bookingTrigger.dataset.endTime,
+                },
+            }),
+        );
     }
 });
 
