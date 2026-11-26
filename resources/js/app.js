@@ -123,6 +123,18 @@ Alpine.data('bookingDrawer', () => ({
     init() {
         this.updateDuration();
 
+        if (window.location.hash === '#new-booking') {
+            this.openBooking({
+                detail: {
+                    roomId: this.$el.dataset.initialRoom,
+                    startTime: this.$el.dataset.initialStart,
+                    endTime: this.$el.dataset.initialEnd,
+                },
+            });
+
+            return;
+        }
+
         if (this.$el.dataset.openOnLoad === 'true') {
             window.setTimeout(() => this.openDrawer(), 0);
         }

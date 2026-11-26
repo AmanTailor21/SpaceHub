@@ -37,7 +37,7 @@
                         $navigation = [
                             ['label' => 'Calendar', 'href' => route('bookings.index'), 'icon' => 'calendar', 'active' => request()->routeIs('bookings.index') && request('view') !== 'list'],
                             ['label' => 'Rooms', 'href' => route('rooms.index'), 'icon' => 'building', 'active' => request()->routeIs('rooms.index')],
-                            ['label' => 'Find a room', 'href' => route('bookings.index') . '#find-room', 'icon' => 'search', 'active' => false],
+                            ['label' => 'Find a room', 'href' => route('bookings.index') . '#find-room', 'icon' => 'search', 'active' => request()->routeIs('rooms.available')],
                             ['label' => 'Bookings', 'href' => route('bookings.index', ['view' => 'list']), 'icon' => 'list', 'active' => request('view') === 'list'],
                         ];
                     @endphp

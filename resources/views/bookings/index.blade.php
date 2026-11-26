@@ -184,14 +184,34 @@
         </div>
     </x-card>
 
+    <section id="find-room" class="mt-6 scroll-mt-24">
+        <x-card padding="none">
+            <div class="border-b border-line px-5 py-4">
+                <h2 class="text-sm font-semibold text-ink">Find a room</h2>
+                <p class="mt-1 text-sm text-ink-muted">Search open rooms by time and group size.</p>
+            </div>
+            <form method="GET" action="{{ route('rooms.available') }}" class="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-5 xl:items-end sm:px-5">
+                <x-input name="date" label="Date" type="date" :value="$selectedDate" required />
+                <x-time-picker name="start_time" label="Starts · IST" value="10:00" required />
+                <x-time-picker name="end_time" label="Ends · IST" value="11:00" required />
+                <x-input name="people" label="People" type="number" min="1" value="1" required />
+                <x-button type="submit" class="w-full">Find availability</x-button>
+            </form>
+        </x-card>
+    </section>
+
     <div class="mt-5 flex flex-wrap items-center justify-between gap-3 text-xs text-ink-subtle">
         <p>All times shown in India Standard Time (IST, UTC+05:30).</p>
         <p><span class="font-medium text-ink-muted">Tip:</span> Select an empty 30-minute slot to start a booking.</p>
     </div>
 
     <div
+        id="new-booking"
         x-data="bookingDrawer"
         data-open-on-load="{{ $errors->any() ? 'true' : 'false' }}"
+        data-initial-room="{{ $initialRoomId ?? '' }}"
+        data-initial-start="{{ $initialStartTime ?? '' }}"
+        data-initial-end="{{ $initialEndTime ?? '' }}"
         @spacehub:booking-open.window="openBooking"
     >
         <x-drawer id="booking-create" title="New booking" description="Choose a room and meeting time. All times are shown in IST.">
