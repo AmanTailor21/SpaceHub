@@ -16,6 +16,35 @@ On first startup, database migrations and seeding run before PHP-FPM is marked h
 
 The six seeded rooms are Alpha (4, 1F), Beta (6, 1F), Gamma (8, 2F), Delta (10, 2F), Epsilon (12, 3F), and Zeta (20, 3F). The seed is safe to rerun.
 
+## UI screenshots
+
+The schedule uses the same layout in both appearances; the theme toggle in the sidebar switches between system, light, and dark and remembers the selection.
+
+| Light mode                                                              | Dark mode                                                             |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| ![SpaceHub calendar in light mode](docs/screenshots/calendar-light.png) | ![SpaceHub calendar in dark mode](docs/screenshots/calendar-dark.png) |
+
+### Lighthouse
+
+Lighthouse 13.6.0 mobile emulation against the Docker app measured **76 Performance**, **100 Accessibility**, and **81 Best Practices**. The 90+ target was not met for Performance or Best Practices. Lighthouse reported one Fenced Frame API deprecation warning attributed to the JavaScript bundle; the built bundle does not contain a reference to that API, so the warning remains unresolved.
+
+## UI architecture
+
+- **App shell:** responsive sidebar navigation, page context, persistent theme control, and a global booking action.
+- **Calendar:** desktop timeline across the six rooms, mobile per-room agenda, date and room filters, and a live current-time indicator. Selecting an open slot opens the booking drawer with its room and times filled in.
+- **Booking drawer:** server-validated form, inline field errors, duration feedback, conflict details, and preserved input. Selecting a booking opens its details panel and a confirmation dialog for cancellation.
+- **Rooms:** directory cards show capacity, floor, and current in-use status; floor and minimum-capacity filters narrow the list.
+- **Find a room:** search by date, time range, and people. Result cards link back to a prefilled booking drawer.
+- **Bookings:** searchable and sortable paginated table for date, room, status, and booker.
+- **Components and assets:** anonymous Blade components share controls, cards, badges, dialogs, tables, and states. Tailwind CSS v4 design tokens live in `resources/css/app.css`; Alpine uses its CSP build from `resources/js/app.js`. Inter is self-hosted through Fontsource; no CDN assets or SPA framework are used.
+
+Primary UI URLs:
+
+- Calendar: [http://localhost:8080/](http://localhost:8080/)
+- Rooms: [http://localhost:8080/rooms](http://localhost:8080/rooms)
+- Find a room: use the **Find a room** section on the calendar, or open a results URL such as `/rooms/available?date=2030-01-02&start_time=10%3A00&end_time=11%3A00&people=5`
+- Bookings list: [http://localhost:8080/?view=list](http://localhost:8080/?view=list)
+
 ## Checks and development
 
 Run the test suite, Pint check, or Larastan from the running app container:
@@ -46,6 +75,8 @@ npm run build
 ```
 
 Docker builds the production assets automatically.
+
+GitHub Actions runs Pint, Larastan, PHPUnit, Prettier, and the production Vite build on pushes and pull requests.
 
 ## API
 
@@ -132,9 +163,9 @@ Overlapping active bookings return `409 Conflict` and name the existing booking:
 
 - Add authentication and role-based permissions, with booking ownership tied to an account.
 - Add integration/load tests against MySQL for simultaneous booking attempts and verify locking under contention.
-- Add a calendar-style timeline, configurable opening hours, and booking notifications if the co-working workflow needs them.
-- Add CI for the test, formatting, and static-analysis commands.
+- Add configurable opening hours, booking notifications, and deeper accessibility audits with real assistive technology.
+- Add richer booking-list actions and room-status summaries if the co-working workflow needs them.
 
 ## AI tools
 
-Copilot SDK in VS Code was used as an AI coding assistant to draft and revise Laravel implementation, tests, and this documentation. The changes were checked iteratively with PHPUnit, Pint, and Larastan; the AI did not run Docker in this environment because Docker was unavailable.
+Copilot SDK in VS Code assisted with implementation, UI iteration, targeted feature tests, and documentation. I used the repository's Docker Compose stack for runtime verification and ran PHPUnit, Pint, Larastan, Prettier, and Vite checks; generated suggestions were reviewed and adjusted against the existing Laravel code and test behavior.
