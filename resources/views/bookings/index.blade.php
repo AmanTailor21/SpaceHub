@@ -279,7 +279,7 @@
                     @click="askCancel"
                     class="min-h-10 rounded-md border border-danger-600/40 px-3 text-sm font-semibold text-danger-600 hover:bg-danger-50"
                 >Cancel booking</button>
-                <form x-ref="cancelForm" method="POST" :action="booking.cancelUrl" class="hidden">
+                <form id="booking-cancel-form" method="POST" :action="booking.cancelUrl" class="hidden">
                     @csrf
                     @method('DELETE')
                 </form>

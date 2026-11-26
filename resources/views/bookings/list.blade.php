@@ -50,17 +50,17 @@
         <x-table>
             <thead class="border-b border-line bg-panel-muted/60 text-xs font-semibold uppercase tracking-wide text-ink-subtle">
                 <tr>
-                    <th scope="col" class="px-4 py-3">
+                    <th scope="col" aria-sort="{{ $filters['sort'] === 'date' ? ($filters['direction'] === 'asc' ? 'ascending' : 'descending') : 'none' }}" class="px-4 py-3">
                         <a href="{{ route('bookings.index', array_merge(request()->query(), ['view' => 'list', 'sort' => 'date', 'direction' => $filters['sort'] === 'date' && $filters['direction'] === 'asc' ? 'desc' : 'asc'])) }}" class="hover:text-ink">Date &amp; time</a>
                     </th>
-                    <th scope="col" class="px-4 py-3">
+                    <th scope="col" aria-sort="{{ $filters['sort'] === 'room' ? ($filters['direction'] === 'asc' ? 'ascending' : 'descending') : 'none' }}" class="px-4 py-3">
                         <a href="{{ route('bookings.index', array_merge(request()->query(), ['view' => 'list', 'sort' => 'room', 'direction' => $filters['sort'] === 'room' && $filters['direction'] === 'asc' ? 'desc' : 'asc'])) }}" class="hover:text-ink">Room</a>
                     </th>
                     <th scope="col" class="px-4 py-3">Meeting</th>
-                    <th scope="col" class="px-4 py-3">
+                    <th scope="col" aria-sort="{{ $filters['sort'] === 'status' ? ($filters['direction'] === 'asc' ? 'ascending' : 'descending') : 'none' }}" class="px-4 py-3">
                         <a href="{{ route('bookings.index', array_merge(request()->query(), ['view' => 'list', 'sort' => 'status', 'direction' => $filters['sort'] === 'status' && $filters['direction'] === 'asc' ? 'desc' : 'asc'])) }}" class="hover:text-ink">Status</a>
                     </th>
-                    <th scope="col" class="px-4 py-3">
+                    <th scope="col" aria-sort="{{ $filters['sort'] === 'booked_by' ? ($filters['direction'] === 'asc' ? 'ascending' : 'descending') : 'none' }}" class="px-4 py-3">
                         <a href="{{ route('bookings.index', array_merge(request()->query(), ['view' => 'list', 'sort' => 'booked_by', 'direction' => $filters['sort'] === 'booked_by' && $filters['direction'] === 'asc' ? 'desc' : 'asc'])) }}" class="hover:text-ink">Booked by</a>
                     </th>
                     <th scope="col" class="px-4 py-3"><span class="sr-only">Actions</span></th>

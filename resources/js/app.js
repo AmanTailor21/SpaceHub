@@ -3,31 +3,57 @@ import Alpine from '@alpinejs/csp';
 
 const themeKey = 'spacehub-theme';
 const themePreference = localStorage.getItem(themeKey) ?? 'system';
+const systemColorScheme = window.matchMedia('(prefers-color-scheme: dark)');
 
 function applyTheme(preference) {
     const useDark = preference === 'dark'
-        || (preference === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        || (preference === 'system' && systemColorScheme.matches);
 
     document.documentElement.classList.toggle('dark', useDark);
 }
 
 applyTheme(themePreference);
+systemColorScheme.addEventListener('change', () => {
+    if ((localStorage.getItem(themeKey) ?? 'system') === 'system') {
+        applyTheme('system');
+    }
+});
 
 window.Alpine = Alpine;
 
 Alpine.data('appShell', () => ({
     sidebarOpen: false,
+    isDesktop: window.matchMedia('(min-width: 1024px)').matches,
+
+    init() {
+        window.matchMedia('(min-width: 1024px)').addEventListener('change', (event) => {
+            this.isDesktop = event.matches;
+            this.sidebarOpen = false;
+        });
+    },
 
     toggleSidebar() {
         this.sidebarOpen = ! this.sidebarOpen;
+
+        if (this.sidebarOpen) {
+            this.$nextTick(() => document.querySelector('#app-sidebar a')?.focus());
+        }
     },
 
     closeSidebar() {
         this.sidebarOpen = false;
+
+        if (! this.isDesktop) {
+            this.$nextTick(() => document.querySelector('[aria-controls="app-sidebar"]')?.focus());
+        }
     },
 
     get sidebarClass() {
         return this.sidebarOpen ? 'translate-x-0' : '-translate-x-full';
+    },
+
+    get sidebarInert() {
+        return ! this.isDesktop && ! this.sidebarOpen;
     },
 }));
 
@@ -142,17 +168,20 @@ Alpine.data('bookingDrawer', () => ({
 
     openBooking(event) {
         const booking = event.detail ?? {};
+        const room = document.getElementById('room_id');
+        const startTime = document.getElementById('start_time');
+        const endTime = document.getElementById('end_time');
 
-        if (booking.roomId) {
-            this.$refs.room.value = booking.roomId;
+        if (booking.roomId && room) {
+            room.value = booking.roomId;
         }
 
-        if (booking.startTime) {
-            this.$refs.startTime.value = booking.startTime;
+        if (booking.startTime && startTime) {
+            startTime.value = booking.startTime;
         }
 
-        if (booking.endTime) {
-            this.$refs.endTime.value = booking.endTime;
+        if (booking.endTime && endTime) {
+            endTime.value = booking.endTime;
         }
 
         this.updateDuration();
@@ -162,14 +191,17 @@ Alpine.data('bookingDrawer', () => ({
     openDrawer() {
         this.$dispatch('spacehub:dialog-open', { id: 'booking-create' });
         this.$nextTick(() => {
-            const invalidField = this.$el.querySelector('[aria-invalid="true"]');
-            (invalidField ?? this.$refs.title).focus();
+            const drawer = document.getElementById('booking-create');
+            const invalidField = drawer?.querySelector('[aria-invalid="true"]');
+            (invalidField ?? document.getElementById('title'))?.focus();
         });
     },
 
     updateDuration() {
-        const start = new Date(this.$refs.startTime.value);
-        const end = new Date(this.$refs.endTime.value);
+        const startValue = document.getElementById('start_time')?.value;
+        const endValue = document.getElementById('end_time')?.value;
+        const start = new Date(startValue);
+        const end = new Date(endValue);
         const minutes = (end - start) / 60000;
 
         this.duration = Number.isFinite(minutes) && minutes > 0
@@ -196,7 +228,7 @@ Alpine.data('bookingDetails', () => ({
         }
 
         this.$dispatch('spacehub:dialog-close', { id: 'cancel-confirm' });
-        this.$refs.cancelForm.requestSubmit();
+        document.getElementById('booking-cancel-form')?.requestSubmit();
     },
 }));
 

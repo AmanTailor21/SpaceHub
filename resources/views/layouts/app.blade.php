@@ -7,7 +7,7 @@
     <title>@yield('title', 'SpaceHub')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body x-data="appShell" class="min-h-screen bg-canvas text-ink antialiased">
+<body x-data="appShell" @keydown.escape.window="closeSidebar" class="min-h-screen bg-canvas text-ink antialiased">
     <div class="min-h-screen">
         <div
             x-cloak
@@ -22,6 +22,8 @@
             id="app-sidebar"
             class="fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-full flex-col border-r border-line bg-panel transition-transform duration-200 ease-smooth lg:translate-x-0"
             :class="sidebarClass"
+            :inert="sidebarInert"
+            :aria-hidden="sidebarInert ? 'true' : 'false'"
             aria-label="Main navigation"
         >
             <div class="flex h-16 items-center gap-3 border-b border-line px-5">
@@ -80,14 +82,14 @@
             </div>
         </aside>
 
-        <div class="min-h-screen lg:pl-64">
+        <div class="min-h-screen lg:pl-64" :inert="sidebarOpen && !isDesktop">
             <header class="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-line bg-panel/95 px-4 backdrop-blur sm:px-6 lg:px-8">
                 <button
                     type="button"
                     @click="toggleSidebar"
                     :aria-expanded="sidebarOpen"
                     aria-controls="app-sidebar"
-                    aria-label="Open navigation"
+                    :aria-label="sidebarOpen ? 'Close navigation' : 'Open navigation'"
                     class="grid size-10 place-items-center rounded-md text-ink-muted hover:bg-panel-muted hover:text-ink lg:hidden"
                 >
                     @include('components.icon', ['name' => 'menu', 'class' => 'size-5'])

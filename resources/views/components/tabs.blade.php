@@ -5,7 +5,9 @@
 
 <nav {{ $attributes->class(['flex gap-1 overflow-x-auto border-b border-line']) }} aria-label="Page sections">
     @foreach ($items as $item)
-        @php($isActive = ($active ?? request()->fullUrl()) === ($item['value'] ?? $item['href']))
+        @php
+            $isActive = ($active ?? request()->fullUrl()) === ($item['value'] ?? $item['href']);
+        @endphp
         <a
             href="{{ $item['href'] }}"
             @if ($isActive) aria-current="page" @endif
