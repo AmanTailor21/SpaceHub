@@ -21,7 +21,7 @@
         <aside
             id="app-sidebar"
             class="fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-full flex-col border-r border-line bg-panel transition-transform duration-200 ease-smooth lg:translate-x-0"
-            :class="{ 'translate-x-0': sidebarOpen }"
+            :class="sidebarClass"
             aria-label="Main navigation"
         >
             <div class="flex h-16 items-center gap-3 border-b border-line px-5">
