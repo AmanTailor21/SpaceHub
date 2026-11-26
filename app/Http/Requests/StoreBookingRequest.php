@@ -52,7 +52,7 @@ class StoreBookingRequest extends FormRequest
                 $validator->errors()->add('end_time', 'Bookings must start and end on the same day.');
             }
 
-            if ($end->diffInSeconds($start) > 4 * 60 * 60) {
+            if ($start->diffInSeconds($end) > 4 * 60 * 60) {
                 $validator->errors()->add('end_time', 'A booking cannot be longer than 4 hours.');
             }
 
