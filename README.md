@@ -12,6 +12,8 @@ docker compose up --build
 
 Open the app at [http://localhost:8080](http://localhost:8080). MySQL data is kept in the named `mysql_data` volume and survives container restarts. `docker compose down` preserves it; `docker compose down -v` removes it.
 
+On first startup, database migrations and seeding run before PHP-FPM is marked healthy; Nginx waits for that health check. If needed, use `docker compose ps` and wait for the `app` service to show `healthy` before opening the URL.
+
 The six seeded rooms are Alpha (4, 1F), Beta (6, 1F), Gamma (8, 2F), Delta (10, 2F), Epsilon (12, 3F), and Zeta (20, 3F). The seed is safe to rerun.
 
 ## Checks and development
@@ -19,10 +21,12 @@ The six seeded rooms are Alpha (4, 1F), Beta (6, 1F), Gamma (8, 2F), Delta (10, 
 Run the test suite, Pint check, or Larastan from the running app container:
 
 ```sh
-docker compose exec app composer test
+docker compose exec -e APP_ENV=testing app composer test
 docker compose exec app composer lint
 docker compose exec app composer analyse
 ```
+
+The test command sets `APP_ENV=testing` so Laravel uses the PHPUnit SQLite configuration instead of the running app's MySQL environment.
 
 Format code on the host with `composer format`. After cloning, install the pre-commit hook once:
 
