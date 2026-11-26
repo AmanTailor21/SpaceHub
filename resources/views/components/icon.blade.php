@@ -49,6 +49,9 @@
             <circle cx="12" cy="12" r="9" />
             <path d="M12 7v5l3 2" />
             @break
+        @case('filter')
+            <path d="M4 6h16M7 12h10m-7 6h4" />
+            @break
         @case('check')
             <path d="m5 12 4 4L19 6" />
             @break

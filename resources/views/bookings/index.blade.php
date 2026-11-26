@@ -1,135 +1,191 @@
 @extends('layouts.app')
 
-@section('title', 'Bookings · SpaceHub')
+@section('title', 'Calendar · SpaceHub')
+@section('page-title', 'Calendar')
+@section('header-context')
+    {{ \Carbon\Carbon::parse($selectedDate)->format('l, d M Y') }} · Times shown in IST
+@endsection
 
 @section('content')
-    <div class="mb-8">
-        <p class="text-sm font-semibold uppercase tracking-wide text-indigo-700">Room schedule</p>
-        <h1 class="mt-2 text-3xl font-bold tracking-tight">Bookings</h1>
-        <p class="mt-2 text-slate-600">Book a room and see what is happening throughout the day.</p>
-    </div>
+    <x-page-header
+        eyebrow="Room schedule"
+        :title="\Carbon\Carbon::parse($selectedDate)->format('D, d M Y')"
+        description="A clear view of every meeting room, from 08:00 to 20:00 IST."
+    >
+        <a href="{{ route('bookings.index', ['date' => $previousDate, 'room_id' => $selectedRoomId]) }}" aria-label="Previous day" class="grid size-10 place-items-center rounded-md border border-line bg-panel text-ink-muted shadow-sm transition-colors hover:bg-panel-muted hover:text-ink">
+            @include('components.icon', ['name' => 'chevron-left', 'class' => 'size-4'])
+        </a>
+        <a href="{{ route('bookings.index', ['date' => now()->toDateString(), 'room_id' => $selectedRoomId]) }}" @class([
+            'inline-flex min-h-10 items-center rounded-md border px-3 text-sm font-medium shadow-sm transition-colors',
+            'border-brand-200 bg-brand-50 text-brand-700 dark:text-brand-600' => $isToday,
+            'border-line bg-panel text-ink-muted hover:bg-panel-muted' => ! $isToday,
+        ])>Today</a>
+        <a href="{{ route('bookings.index', ['date' => $nextDate, 'room_id' => $selectedRoomId]) }}" aria-label="Next day" class="grid size-10 place-items-center rounded-md border border-line bg-panel text-ink-muted shadow-sm transition-colors hover:bg-panel-muted hover:text-ink">
+            @include('components.icon', ['name' => 'chevron-right', 'class' => 'size-4'])
+        </a>
+    </x-page-header>
 
-    <section class="mb-8 rounded-xl border border-indigo-100 bg-indigo-50/60 p-5">
-        <h2 class="font-semibold">Find an available room</h2>
-        <form method="GET" action="{{ route('rooms.available') }}" class="mt-4 flex flex-wrap items-end gap-4">
-            <div>
-                <label for="availability-date" class="mb-1 block text-sm font-medium">Date</label>
-                <input id="availability-date" type="date" name="date" value="{{ $selectedDate }}" required class="rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+    <x-card padding="none" class="mb-5">
+        <form method="GET" action="{{ route('bookings.index') }}" class="flex flex-col gap-3 p-4 sm:flex-row sm:items-end sm:justify-between sm:px-5">
+            <div class="grid flex-1 gap-3 sm:grid-cols-2 sm:max-w-lg">
+                <x-input name="date" label="Date" type="date" :value="$selectedDate" />
+                <x-select name="room_id" label="Room">
+                    <option value="">All rooms</option>
+                    @foreach ($rooms as $room)
+                        <option value="{{ $room->id }}" @selected($selectedRoomId === $room->id)>{{ $room->name }} · {{ $room->floor }}</option>
+                    @endforeach
+                </x-select>
             </div>
-            <div>
-                <label for="availability-start" class="mb-1 block text-sm font-medium">Starts</label>
-                <input id="availability-start" type="time" name="start_time" required class="rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
-            </div>
-            <div>
-                <label for="availability-end" class="mb-1 block text-sm font-medium">Ends</label>
-                <input id="availability-end" type="time" name="end_time" required class="rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
-            </div>
-            <div>
-                <label for="availability-people" class="mb-1 block text-sm font-medium">People</label>
-                <input id="availability-people" type="number" name="people" min="1" value="1" required class="w-24 rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
-            </div>
-            <button type="submit" class="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-800">Find rooms</button>
+            <x-button type="submit" variant="secondary" size="sm">
+                @include('components.icon', ['name' => 'filter', 'class' => 'size-4'])
+                Apply filters
+            </x-button>
         </form>
-    </section>
+    </x-card>
 
-    <div class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <section>
-            <form method="GET" action="{{ route('bookings.index') }}" class="mb-6 flex flex-wrap items-end gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div>
-                    <label for="filter-date" class="mb-1 block text-sm font-medium">Date</label>
-                    <input id="filter-date" type="date" name="date" value="{{ $selectedDate }}" class="rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label for="filter-room" class="mb-1 block text-sm font-medium">Room</label>
-                    <select id="filter-room" name="room_id" class="rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="">All rooms</option>
-                        @foreach ($rooms as $room)
-                            <option value="{{ $room->id }}" @selected($selectedRoomId === $room->id)>{{ $room->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <button type="submit" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700">Show schedule</button>
-            </form>
-
-            <div class="space-y-5">
-                @foreach ($rooms as $room)
-                    @if ($selectedRoomId === null || $selectedRoomId === $room->id)
-                        <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                            <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-                                <div>
-                                    <h2 class="font-semibold">{{ $room->name }}</h2>
-                                    <p class="mt-1 text-sm text-slate-500">{{ $room->floor }} · {{ $room->capacity }} people</p>
-                                </div>
-                                <span class="text-sm text-slate-500">{{ $bookingsByRoom->get($room->id, collect())->count() }} bookings</span>
-                            </div>
-                            @forelse ($bookingsByRoom->get($room->id, collect()) as $booking)
-                                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 last:border-b-0">
-                                    <div class="min-w-0">
-                                        <p class="font-medium">{{ $booking->title }}</p>
-                                        <p class="mt-1 text-sm text-slate-500">
-                                            {{ $booking->start_time->format('H:i') }}–{{ $booking->end_time->format('H:i') }}
-                                            · {{ $booking->booked_by }}
-                                        </p>
-                                    </div>
-                                    <div class="flex items-center gap-3">
-                                        @if ($booking->status === \App\Enums\BookingStatus::Cancelled)
-                                            <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">Cancelled</span>
-                                        @else
-                                            <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">Confirmed</span>
-                                            <form method="POST" action="{{ route('bookings.destroy', $booking->id) }}">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-sm font-medium text-rose-700 hover:text-rose-900">Cancel</button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </div>
-                            @empty
-                                <p class="px-5 py-4 text-sm text-slate-500">No bookings for this room on this date.</p>
-                            @endforelse
-                        </section>
-                    @endif
-                @endforeach
+    <x-card padding="none" class="overflow-hidden">
+        <div class="flex items-center justify-between border-b border-line px-5 py-3.5">
+            <div>
+                <h2 class="text-sm font-semibold text-ink">Rooms</h2>
+                <p class="mt-0.5 text-xs text-ink-subtle">Select an open 30-minute slot to start a booking</p>
             </div>
-        </section>
+            <span class="hidden items-center gap-1.5 text-xs text-ink-subtle sm:inline-flex">
+                <span class="size-1.5 rounded-full bg-success-600"></span>
+                08:00–20:00 · IST
+            </span>
+        </div>
 
-        <aside class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 class="text-lg font-semibold">Book a room</h2>
-            <p class="mt-1 text-sm text-slate-500">Bookings are available between 08:00 and 20:00.</p>
-            <form method="POST" action="{{ route('bookings.store') }}" class="mt-5 space-y-4">
-                @csrf
-                <div>
-                    <label for="room_id" class="mb-1 block text-sm font-medium">Room</label>
-                    <select id="room_id" name="room_id" required class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="">Choose a room</option>
-                        @foreach ($rooms as $room)
-                            <option value="{{ $room->id }}" @selected(old('room_id') == $room->id)>{{ $room->name }} · {{ $room->capacity }} people</option>
-                        @endforeach
-                    </select>
-                    @error('room_id')<p class="mt-1 text-sm text-rose-700">{{ $message }}</p>@enderror
+        <div class="hidden border-b border-line bg-panel-muted/50 md:grid md:grid-cols-[12rem_minmax(0,1fr)]">
+            <div class="border-r border-line px-5 py-3 text-[11px] font-medium uppercase tracking-wide text-ink-subtle">Room</div>
+            <div class="overflow-x-auto px-4 py-3">
+                <div class="timeline-ruler">
+                    @foreach ($timeLabels as $hour)
+                        <span>{{ str_pad((string) $hour, 2, '0', STR_PAD_LEFT) }}:00</span>
+                    @endforeach
                 </div>
-                <div>
-                    <label for="title" class="mb-1 block text-sm font-medium">Meeting title</label>
-                    <input id="title" name="title" value="{{ old('title') }}" required maxlength="255" class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
-                    @error('title')<p class="mt-1 text-sm text-rose-700">{{ $message }}</p>@enderror
-                </div>
-                <div>
-                    <label for="booked_by" class="mb-1 block text-sm font-medium">Booked by</label>
-                    <input id="booked_by" name="booked_by" value="{{ old('booked_by') }}" required maxlength="255" class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
-                    @error('booked_by')<p class="mt-1 text-sm text-rose-700">{{ $message }}</p>@enderror
-                </div>
-                <div>
-                    <label for="start_time" class="mb-1 block text-sm font-medium">Starts</label>
-                    <input id="start_time" type="datetime-local" name="start_time" value="{{ old('start_time') }}" required class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
-                    @error('start_time')<p class="mt-1 text-sm text-rose-700">{{ $message }}</p>@enderror
-                </div>
-                <div>
-                    <label for="end_time" class="mb-1 block text-sm font-medium">Ends</label>
-                    <input id="end_time" type="datetime-local" name="end_time" value="{{ old('end_time') }}" required class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
-                    @error('end_time')<p class="mt-1 text-sm text-rose-700">{{ $message }}</p>@enderror
-                </div>
-                <button type="submit" class="w-full rounded-lg bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-800">Confirm booking</button>
-            </form>
-        </aside>
+            </div>
+        </div>
+
+        <div class="divide-y divide-line">
+            @foreach ($rooms as $room)
+                @if ($selectedRoomId === null || $selectedRoomId === $room->id)
+                    @php
+                        $roomBookings = $bookingsByRoom->get($room->id, collect());
+                    @endphp
+                    <section class="md:grid md:grid-cols-[12rem_minmax(0,1fr)]" aria-label="{{ $room->name }} room schedule">
+                        <header class="flex items-center justify-between gap-3 border-b border-line bg-panel px-4 py-3 md:border-b-0 md:border-r md:px-5">
+                            <div class="min-w-0">
+                                <h3 class="truncate text-sm font-semibold text-ink">{{ $room->name }}</h3>
+                                <p class="mt-0.5 text-xs text-ink-subtle">{{ $room->floor }} · {{ $room->capacity }} seats</p>
+                            </div>
+                            <span class="shrink-0 rounded-md bg-panel-muted px-2 py-1 text-[11px] font-medium text-ink-muted">{{ $roomBookings->count() }}</span>
+                        </header>
+
+                        <div class="hidden overflow-x-auto px-4 py-3 md:block">
+                            <div class="timeline-track" aria-label="08:00 to 20:00 timeline">
+                                @foreach (range(0, 23) as $slot)
+                                    @php
+                                        $slotStart = $slot * 30;
+                                        $slotEnd = $slotStart + 30;
+                                        $slotStartTime = \Carbon\Carbon::parse($selectedDate, config('app.timezone'))->setTime(8, 0)->addMinutes($slotStart);
+                                        $slotEndTime = $slotStartTime->copy()->addMinutes(30);
+                                    @endphp
+                                    <button
+                                        type="button"
+                                        class="timeline-slot"
+                                        data-grid-start="{{ $slotStart + 1 }}"
+                                        data-grid-end="{{ $slotEnd + 1 }}"
+                                        data-room-id="{{ $room->id }}"
+                                        data-start-time="{{ $slotStartTime->format('Y-m-d\TH:i') }}"
+                                        data-end-time="{{ $slotEndTime->format('Y-m-d\TH:i') }}"
+                                        data-open-booking
+                                        @disabled($slotStartTime->lessThan(now()))
+                                        aria-label="Book {{ $room->name }} from {{ $slotStartTime->format('H:i') }} to {{ $slotEndTime->format('H:i') }} IST"
+                                        title="Book {{ $room->name }} · {{ $slotStartTime->format('H:i') }}–{{ $slotEndTime->format('H:i') }}"
+                                    ></button>
+                                @endforeach
+
+                                @foreach ($roomBookings as $booking)
+                                    @php
+                                        $bookingStart = max(0, ($booking->start_time->hour * 60) + $booking->start_time->minute - 480);
+                                        $bookingEnd = min(720, ($booking->end_time->hour * 60) + $booking->end_time->minute - 480);
+                                    @endphp
+                                    <button
+                                        type="button"
+                                        class="timeline-event {{ $booking->status === \App\Enums\BookingStatus::Cancelled ? 'timeline-event--cancelled' : 'timeline-event--confirmed' }}"
+                                        data-grid-start="{{ $bookingStart + 1 }}"
+                                        data-grid-end="{{ max($bookingStart + 1, $bookingEnd) + 1 }}"
+                                        data-booking-id="{{ $booking->id }}"
+                                        data-open-booking-details
+                                        aria-label="{{ $booking->title }}, {{ $booking->start_time->format('H:i') }} to {{ $booking->end_time->format('H:i') }} IST, {{ $booking->status->value }}"
+                                        title="{{ $booking->title }} · {{ $booking->start_time->format('H:i') }}–{{ $booking->end_time->format('H:i') }} IST"
+                                    >
+                                        <span class="block truncate text-xs font-semibold">{{ $booking->title }}</span>
+                                        <span class="mt-1 block truncate text-[11px] font-medium">
+                                            {{ $booking->start_time->format('H:i') }}–{{ $booking->end_time->format('H:i') }}
+                                            <span class="sr-only">IST</span>
+                                        </span>
+                                    </button>
+                                @endforeach
+
+                                @if ($nowOffset !== null && $nowOffset < 720)
+                                    <span class="timeline-now" data-grid-start="{{ $nowOffset + 1 }}" aria-label="Current time"></span>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 px-4 py-3 md:hidden">
+                            @forelse ($roomBookings as $booking)
+                                <button
+                                    type="button"
+                                    data-booking-id="{{ $booking->id }}"
+                                    data-open-booking-details
+                                    class="flex w-full items-start justify-between gap-3 rounded-md border border-line bg-panel-muted/50 p-3 text-left"
+                                >
+                                    <span class="min-w-0">
+                                        <span class="block truncate text-sm font-semibold text-ink">{{ $booking->title }}</span>
+                                        <span class="mt-1 block text-xs text-ink-muted">
+                                            {{ $booking->start_time->format('H:i') }}–{{ $booking->end_time->format('H:i') }} IST · {{ $booking->booked_by }}
+                                        </span>
+                                    </span>
+                                    <x-badge
+                                        :variant="$booking->status->value"
+                                        :label="$booking->status === \App\Enums\BookingStatus::Confirmed ? 'Confirmed' : 'Cancelled'"
+                                    />
+                                </button>
+                            @empty
+                                <p class="py-2 text-sm text-ink-subtle">No bookings for this room.</p>
+                            @endforelse
+                        </div>
+                    </section>
+                @endif
+            @endforeach
+        </div>
+    </x-card>
+
+    <div class="mt-5 flex flex-wrap items-center justify-between gap-3 text-xs text-ink-subtle">
+        <p>All times shown in India Standard Time (IST, UTC+05:30).</p>
+        <p><span class="font-medium text-ink-muted">Tip:</span> Select an empty 30-minute slot to start a booking.</p>
     </div>
+
+    <section id="new-booking" class="mt-8 scroll-mt-24">
+        <x-card title="New booking" description="Choose a room and meeting time. Slots are shown in IST." padding="lg">
+            <form method="POST" action="{{ route('bookings.store') }}" class="grid gap-4 sm:grid-cols-2">
+                @csrf
+                <x-select name="room_id" label="Room" required>
+                    <option value="">Choose a room</option>
+                    @foreach ($rooms as $room)
+                        <option value="{{ $room->id }}" @selected(old('room_id') == $room->id)>{{ $room->name }} · {{ $room->capacity }} seats · {{ $room->floor }}</option>
+                    @endforeach
+                </x-select>
+                <x-input name="title" label="Meeting title" :value="old('title')" required maxlength="255" />
+                <x-input name="booked_by" label="Booked by" :value="old('booked_by')" required maxlength="255" />
+                <x-time-picker name="start_time" label="Starts · IST" type="datetime-local" :value="old('start_time')" required />
+                <x-time-picker name="end_time" label="Ends · IST" type="datetime-local" :value="old('end_time')" required />
+                <div class="flex items-end sm:col-span-2">
+                    <x-button type="submit" class="w-full sm:w-auto">Confirm booking</x-button>
+                </div>
+            </form>
+        </x-card>
+    </section>
 @endsection

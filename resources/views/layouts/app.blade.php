@@ -102,15 +102,15 @@
                     <span class="size-1.5 rounded-full bg-success-600"></span>
                     IST · {{ now()->format('H:i') }}
                 </span>
-                <button
-                    type="button"
+                <a
+                    href="{{ route('bookings.index') }}#new-booking"
                     data-open-booking
                     class="inline-flex min-h-10 items-center gap-2 rounded-md bg-brand-600 px-3.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus-visible:outline-offset-2"
                 >
                     @include('components.icon', ['name' => 'plus', 'class' => 'size-4'])
                     <span class="hidden sm:inline">New booking</span>
                     <span class="sm:hidden">New</span>
-                </button>
+                </a>
             </header>
 
             <main id="main-content" class="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
