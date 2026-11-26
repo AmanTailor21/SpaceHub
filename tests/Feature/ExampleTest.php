@@ -2,18 +2,31 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
+use Database\Seeders\RoomSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
-    /**
-     * A basic test example.
-     */
-    public function test_the_application_returns_a_successful_response(): void
-    {
-        $response = $this->get('/');
+    use RefreshDatabase;
 
-        $response->assertStatus(200);
+    public function test_the_room_directory_displays_seeded_rooms(): void
+    {
+        $this->seed(RoomSeeder::class);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Alpha')
+            ->assertSee('20');
+    }
+
+    public function test_the_rooms_api_returns_the_seeded_rooms(): void
+    {
+        $this->seed(RoomSeeder::class);
+
+        $this->getJson('/api/rooms')
+            ->assertOk()
+            ->assertJsonCount(6, 'data')
+            ->assertJsonPath('data.0.name', 'Alpha');
     }
 }
