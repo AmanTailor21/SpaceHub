@@ -56,5 +56,13 @@ class RoomDirectoryViewTest extends TestCase
             ->assertSee('data-start-time="2030-01-03T10:00"', false)
             ->assertSee('data-end-time="2030-01-03T11:00"', false)
             ->assertSee('start_time=2030-01-03T10%3A00', false);
+
+        $beta = Room::query()->where('name', 'Beta')->firstOrFail();
+
+        $this->get('/?date=2030-01-03&room_id='.$beta->id.'&start_time=2030-01-03T10%3A00&end_time=2030-01-03T11%3A00')
+            ->assertOk()
+            ->assertSee('data-initial-room="'.$beta->id.'"', false)
+            ->assertSee('data-initial-start="2030-01-03T10:00"', false)
+            ->assertSee('data-initial-end="2030-01-03T11:00"', false);
     }
 }

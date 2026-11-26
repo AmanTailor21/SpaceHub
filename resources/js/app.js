@@ -1,4 +1,3 @@
-import './bootstrap';
 import Alpine from '@alpinejs/csp';
 
 const themeKey = 'spacehub-theme';
@@ -149,13 +148,15 @@ Alpine.data('bookingDrawer', () => ({
         this.updateDuration();
 
         if (window.location.hash === '#new-booking') {
-            this.openBooking({
-                detail: {
-                    roomId: this.$el.dataset.initialRoom,
-                    startTime: this.$el.dataset.initialStart,
-                    endTime: this.$el.dataset.initialEnd,
-                },
-            });
+            window.setTimeout(() => {
+                this.openBooking({
+                    detail: {
+                        roomId: this.$el.dataset.initialRoom,
+                        startTime: this.$el.dataset.initialStart,
+                        endTime: this.$el.dataset.initialEnd,
+                    },
+                });
+            }, 0);
 
             return;
         }
@@ -167,9 +168,9 @@ Alpine.data('bookingDrawer', () => ({
 
     openBooking(event) {
         const booking = event.detail ?? {};
-        const room = document.getElementById('room_id');
-        const startTime = document.getElementById('start_time');
-        const endTime = document.getElementById('end_time');
+        const room = this.$el.querySelector('#booking-create [name="room_id"]');
+        const startTime = this.$el.querySelector('#booking-create [name="start_time"]');
+        const endTime = this.$el.querySelector('#booking-create [name="end_time"]');
 
         if (booking.roomId && room) {
             room.value = booking.roomId;
@@ -197,8 +198,8 @@ Alpine.data('bookingDrawer', () => ({
     },
 
     updateDuration() {
-        const startValue = document.getElementById('start_time')?.value;
-        const endValue = document.getElementById('end_time')?.value;
+        const startValue = this.$el.querySelector('#booking-create [name="start_time"]')?.value;
+        const endValue = this.$el.querySelector('#booking-create [name="end_time"]')?.value;
         const start = new Date(startValue);
         const end = new Date(endValue);
         const minutes = (end - start) / 60000;
@@ -250,6 +251,7 @@ document.addEventListener('click', (event) => {
         event.preventDefault();
         document.dispatchEvent(
             new CustomEvent('spacehub:booking-details', {
+                bubbles: true,
                 detail: {
                     id: detailsTrigger.dataset.bookingId,
                     title: detailsTrigger.dataset.bookingTitle,
@@ -272,6 +274,7 @@ document.addEventListener('click', (event) => {
         event.preventDefault();
         document.dispatchEvent(
             new CustomEvent('spacehub:booking-open', {
+                bubbles: true,
                 detail: {
                     roomId: bookingTrigger.dataset.roomId,
                     startTime: bookingTrigger.dataset.startTime,

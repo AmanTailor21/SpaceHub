@@ -198,8 +198,9 @@
             <form method="GET" action="{{ route('rooms.available') }}"
                 class="grid gap-3 p-4 sm:grid-cols-2 sm:px-5 xl:grid-cols-5 xl:items-end">
                 <x-input name="date" label="Date" type="date" :value="$selectedDate" required />
-                <x-time-picker name="start_time" label="Starts · IST" value="10:00" required />
-                <x-time-picker name="end_time" label="Ends · IST" value="11:00" required />
+                <x-time-picker id="availability-start-time" name="start_time" label="Starts · IST" value="10:00"
+                    required />
+                <x-time-picker id="availability-end-time" name="end_time" label="Ends · IST" value="11:00" required />
                 <x-input name="people" label="People" type="number" min="1" value="1" required />
                 <x-button type="submit" class="w-full">Find availability</x-button>
             </form>
